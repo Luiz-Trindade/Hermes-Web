@@ -1,80 +1,164 @@
-# Vuetify (Default)
+# Hermes-Web
 
-This is the official scaffolding tool for Vuetify, designed to give you a head start in building your new Vuetify application. It sets up a base template with all the necessary configurations and standard directory structure, enabling you to begin development without the hassle of setting up the project from scratch.
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![Vuetify](https://img.shields.io/badge/Vuetify-1867C0?logo=vuetify&logoColor=white)](https://vuetifyjs.com/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![AI Powered](https://img.shields.io/badge/AI-Powered-FF6B6B)](https://github.com/your-repo/hermes)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-## ❗️ Important Links
+A modern web interface for testing and interacting with agents from the [Hermes](https://github.com/your-repo/hermes) Python library. This application provides an intuitive and responsive chat interface for AI agent communication.
 
-- 📄 [Docs](https://vuetifyjs.com/)
-- 🚨 [Issues](https://issues.vuetifyjs.com/)
-- 🏬 [Store](https://store.vuetifyjs.com/)
-- 🎮 [Playground](https://play.vuetifyjs.com/)
-- 💬 [Discord](https://community.vuetifyjs.com)
+## 🖼️ Screenshots
 
-## 💿 Install
+![Main Interface](./images/screenshot_01.png)
+*Main chat interface with conversation history*
 
-Set up your project using your preferred package manager. Use the corresponding command to install the dependencies:
+![Tools Used](./images/screenshot_02.png)
+*Visualization of tools used by agents*
 
-| Package Manager                                                | Command        |
-|---------------------------------------------------------------|----------------|
-| [yarn](https://yarnpkg.com/getting-started)                   | `yarn install` |
-| [npm](https://docs.npmjs.com/cli/v7/commands/npm-install)     | `npm install`  |
-| [pnpm](https://pnpm.io/installation)                          | `pnpm install` |
-| [bun](https://bun.sh/#getting-started)                        | `bun install`  |
+![Message Input](./images/screenshot_03.png)
+*Message input interface with validation*
 
-After completing the installation, your environment is ready for Vuetify development.
+![Loading State](./images/screenshot_04.png)
+*Loading indicator during processing*
 
 ## ✨ Features
 
-- 🖼️ **Optimized Front-End Stack**: Leverage the latest Vue 3 and Vuetify 3 for a modern, reactive UI development experience. [Vue 3](https://v3.vuejs.org/) | [Vuetify 3](https://vuetifyjs.com/en/)
-- 🗃️ **State Management**: Integrated with [Pinia](https://pinia.vuejs.org/), the intuitive, modular state management solution for Vue.
-- 🚦 **Routing and Layouts**: Utilizes Vue Router for SPA navigation and vite-plugin-vue-layouts for organizing Vue file layouts. [Vue Router](https://router.vuejs.org/) | [vite-plugin-vue-layouts](https://github.com/JohnCampionJr/vite-plugin-vue-layouts)
-- ⚡ **Next-Gen Tooling**: Powered by Vite, experience fast cold starts and instant HMR (Hot Module Replacement). [Vite](https://vitejs.dev/)
-- 🧩 **Automated Component Importing**: Streamline your workflow with unplugin-vue-components, automatically importing components as you use them. [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
+- 💬 **Intuitive Chat Interface**: Real-time chat with modern and responsive design
+- 🛠️ **Tool Visualization**: Displays tools used by agents with parameter details
+- ⏰ **History with Timestamps**: Track complete conversation history with timestamps
+- 🔄 **State Indicators**: Loading states and real-time error handling
+- 📱 **Responsive Design**: Adaptive interface for different screen sizes
+- ⚠️ **Data Protection**: Alert before leaving page to prevent history loss
 
-These features are curated to provide a seamless development experience from setup to deployment, ensuring that your Vuetify application is both powerful and maintainable.
+## 🚀 Technologies Used
 
-## 💡 Usage
+- **Vue 3** - Reactive JavaScript framework
+- **Vuetify 3** - Material Design component framework
+- **Axios** - HTTP client for API communication
+- **Vite** - Modern and fast build tool
 
-This section covers how to start the development server and build your project for production.
+## 📋 Prerequisites
 
-### Starting the Development Server
+- Node.js (version 16 or higher)
+- Hermes library backend running on `http://localhost:8000`
 
-To start the development server with hot-reload, run the following command. The server will be accessible at [http://localhost:3000](http://localhost:3000):
+## 💿 Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd hermes_web
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+## 🚀 Usage
+
+### Development
+
+To start the development server:
 
 ```bash
+npm run dev
+# or
 yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+The application will be available at [http://localhost:3000](http://localhost:3000)
 
-> Add NODE_OPTIONS='--no-warnings' to suppress the JSON import warnings that happen as part of the Vuetify import mapping. If you are on Node [v21.3.0](https://nodejs.org/en/blog/release/v21.3.0) or higher, you can change this to NODE_OPTIONS='--disable-warning=5401'. If you don't mind the warning, you can remove this from your package.json dev script.
+### Production
 
-### Building for Production
-
-To build your project for production, use:
+To build for production:
 
 ```bash
+npm run build
+# or
 yarn build
+# or
+pnpm build
+# or
+bun build
 ```
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+## 🔧 API Configuration
 
-Once the build process is completed, your application will be ready for deployment in a production environment.
+The application is configured to communicate with the backend at `http://localhost:8000`. To change this URL, modify the axios configuration in the component:
 
-## 💪 Support Vuetify Development
+```javascript
+const api = axios.create({
+    baseURL: 'http://localhost:8000', // Change here
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    timeout: 30000
+})
+```
 
-This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library with a comprehensive collection of Vue components. Vuetify is an MIT licensed Open Source project that has been made possible due to the generous contributions by our [sponsors and backers](https://vuetifyjs.com/introduction/sponsors-and-backers/). If you are interested in supporting this project, please consider:
+## 📡 API Structure
 
-- [Requesting Enterprise Support](https://support.vuetifyjs.com/)
-- [Sponsoring John on Github](https://github.com/users/johnleider/sponsorship)
-- [Sponsoring Kael on Github](https://github.com/users/kaelwd/sponsorship)
-- [Supporting the team on Open Collective](https://opencollective.com/vuetify)
-- [Becoming a sponsor on Patreon](https://www.patreon.com/vuetify)
-- [Becoming a subscriber on Tidelift](https://tidelift.com/subscription/npm/vuetify)
-- [Making a one-time donation with Paypal](https://paypal.me/vuetify)
+The application expects the backend to provide a `/chat` endpoint that accepts:
 
-## 📑 License
+**Request:**
+```json
+{
+  "message": "string",
+  "chat_history": [
+    {
+      "role": "user|assistant",
+      "content": "string"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "response": {
+    "blocks": [
+      {
+        "block_type": "text",
+        "text": "string"
+      }
+    ]
+  },
+  "tool_calls": [
+    {
+      "tool_name": "string",
+      "tool_kwargs": {}
+    }
+  ],
+  "current_agent_name": "string"
+}
+```
+
+## 🎨 Customization
+
+The design uses red color palette (`#ff4759`) as the main theme. To customize:
+
+1. Modify color classes in Vuetify components
+2. Adjust CSS variables in component `<style>`
+3. Customize icons and texts as needed
+
+## 📄 License
+
 [MIT](http://opensource.org/licenses/MIT)
 
-Copyright (c) 2016-present Vuetify, LLC
-# Hermes-Web
+Copyright (c) 2025 Hermes-Web
+

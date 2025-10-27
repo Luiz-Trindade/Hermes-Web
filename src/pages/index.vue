@@ -38,7 +38,7 @@
                                             <v-list-item-subtitle class="text-wrap mt-1">
                                                 <div v-for="(value, key) in tool.tool_kwargs" :key="key" class="my-1">
                                                     <span class="font-weight-medium">{{ key }}: </span>
-                                                    <span class="text-caption">{{ value }}</span>
+                                                    <span class="text-caption" :title="value">{{ value }}</span>
                                                 </div>
                                             </v-list-item-subtitle>
                                         </v-list-item>
