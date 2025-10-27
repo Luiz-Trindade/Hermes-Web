@@ -8,7 +8,7 @@
 [![AI Powered](https://img.shields.io/badge/AI-Powered-FF6B6B)](https://github.com/your-repo/hermes)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-A modern web interface for testing and interacting with agents from the [Hermes](https://github.com/your-repo/hermes) Python library. This application provides an intuitive and responsive chat interface for AI agent communication.
+A modern web interface for testing and interacting with agents from the Hermes Python library. This application provides an intuitive and responsive chat interface for AI agent communication.
 
 ## 🖼️ Screenshots
 
