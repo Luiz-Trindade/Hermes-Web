@@ -1,14 +1,14 @@
 <template>
     <!-- Chat History -->
     <v-container fluid class="chat-container">
-        <v-row>
+        <v-row v-if="chat_history.length > 0">
             <v-col>
                 <div v-for="(msg, index) in chat_history" :key="index" class="my-2">
                     <v-card elevation="2" rounded="xl"
                         :class="msg.role === 'user' ? 'pa-3 bg-gray lighten-5 ml-auto' : 'pa-3 bg-red lighten-5 mr-auto'"
                         outlined max-width="40%">
                         <v-card-subtitle class="pa-0 pb-1 d-flex align-center justify-space-between">
-                            <span>{{ msg.role === 'user' ? '👤 Você' : '🤖 Assistente' }}</span>
+                            <span>{{ msg.role === 'user' ? '👤 You' : '🤖 Assistant' }}</span>
 
                             <!-- Tools indicator for assistant messages -->
                             <v-menu v-if="msg.role === 'assistant' && msg.tools && msg.tools.length > 0"
@@ -16,14 +16,13 @@
                                 <template v-slot:activator="{ props }">
                                     <v-chip v-bind="props" size="small" color="blue" variant="flat"
                                         prepend-icon="mdi-tools" class="ml-2 text-white elevation-2">
-                                        {{ msg.tools.length }} {{ msg.tools.length === 1 ? 'ferramenta' : 'ferramentas'
-                                        }}
+                                        {{ msg.tools.length }} {{ msg.tools.length === 1 ? 'tool' : 'tools' }}
                                     </v-chip>
                                 </template>
 
                                 <v-card max-width="400" class="pa-2">
                                     <v-card-title class="text-subtitle-1 pb-2">
-                                        🔧 Ferramentas Utilizadas
+                                        🔧 Tools Used
                                     </v-card-title>
                                     <v-divider></v-divider>
                                     <v-list density="compact">
@@ -59,14 +58,21 @@
                 <div v-if="isLoading" class="my-2">
                     <v-card elevation="2" rounded="xl" class="pa-3 bg-red lighten-5 mr-auto" outlined max-width="40%">
                         <v-card-subtitle class="pa-0 pb-1">
-                            <span>🤖 Assistente</span>
+                            <span>🤖 Assistant</span>
                         </v-card-subtitle>
                         <div class="d-flex align-center">
                             <v-progress-circular indeterminate size="20" width="2" class="mr-2"></v-progress-circular>
-                            <span>Digitando...</span>
+                            <span>Typing...</span>
                         </div>
                     </v-card>
                 </div>
+            </v-col>
+        </v-row>
+
+        <v-row v-else class="fill-height">
+            <v-col class="d-flex justify-center align-center flex-column">
+                <h1 class="welcome-text">{{ displayedText }}<span class="cursor">|</span></h1>
+                <p class="subtitle-text mt-4">Start a conversation with your AI assistant ✨</p>
             </v-col>
         </v-row>
     </v-container>
@@ -75,7 +81,7 @@
     <v-footer app class="bg-gray" elevation="4">
         <v-responsive class="mx-auto mb-2" max-width="800">
             <div class="d-flex align-center">
-                <v-textarea elevation="2" rounded="xl" variant="solo" v-model="message" placeholder="Faça uma pergunta"
+                <v-textarea elevation="2" rounded="xl" variant="solo" v-model="message" placeholder="Ask a question"
                     prepend-inner-icon="mdi-robot" auto-grow rows="1" max-rows="6" hide-details="auto"
                     @keydown.enter.prevent="sendMessage" :disabled="isLoading" class="flex-grow-1 text-input">
                 </v-textarea>
@@ -86,7 +92,7 @@
 
             <div class="mt-2">
                 <small class="d-flex align-center justify-center text--secondary">
-                    Pressione "Enter" para enviar a mensagem ou clique no ícone de envio.
+                    Press "Enter" to send the message or click the send icon.
                 </small>
             </div>
 
@@ -106,27 +112,41 @@ const message = ref('')
 const chat_history = ref([])
 const isLoading = ref(false)
 const errorMessage = ref('')
+const displayedText = ref('')
 
-// Função para alertar antes de sair da página
+// Typing effect for welcome message
+const fullText = 'Welcome to Hermes-AI'
+let typingIndex = 0
+
+const typeText = () => {
+    if (typingIndex < fullText.length) {
+        displayedText.value += fullText.charAt(typingIndex)
+        typingIndex++
+        setTimeout(typeText, 100) // Adjust speed here (100ms per character)
+    }
+}
+
+// Function to alert before leaving the page
 const handleBeforeUnload = (event) => {
     if (chat_history.value.length > 0) {
         event.preventDefault()
-        event.returnValue = 'Você tem uma conversa em andamento. Se atualizar a página, todo o histórico será perdido. Deseja realmente sair?'
+        event.returnValue = 'You have an ongoing conversation. If you refresh the page, all history will be lost. Do you really want to leave?'
         return event.returnValue
     }
 }
 
-// Adiciona o listener quando o componente é montado
+// Add listener when component is mounted
 onMounted(() => {
     window.addEventListener('beforeunload', handleBeforeUnload)
+    typeText() // Start typing effect
 })
 
-// Remove o listener quando o componente é desmontado
+// Remove listener when component is unmounted
 onBeforeUnmount(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
-// Configura a instância do axios
+// Configure axios instance
 const api = axios.create({
     baseURL: 'http://localhost:8000',
     headers: {
@@ -138,38 +158,38 @@ const sendMessage = async () => {
     if (message.value.trim() && !isLoading.value) {
         const userMessage = message.value.trim()
 
-        // Adiciona mensagem do usuário ao histórico
+        // Add user message to history
         chat_history.value.push({
             role: 'user',
             content: userMessage,
             timestamp: new Date()
         })
 
-        // Limpa o input
+        // Clear input
         message.value = ''
 
-        // Scroll para o final
+        // Scroll to bottom
         await nextTick()
         scrollToBottom()
 
-        // Ativa loading
+        // Activate loading
         isLoading.value = true
         errorMessage.value = ''
 
         try {
-            // Prepara o histórico no formato esperado pelo backend
+            // Prepare history in the format expected by backend
             const historyForBackend = chat_history.value.map(msg => ({
                 role: msg.role,
                 content: msg.content
             }))
 
-            // Faz a requisição para o backend usando axios
+            // Make request to backend using axios
             const { data } = await api.post('/chat', {
                 message: userMessage,
                 chat_history: historyForBackend
             })
 
-            // Extrai a resposta do assistente
+            // Extract assistant response
             let assistantMessage = ''
             if (data.response && data.response.blocks) {
                 assistantMessage = data.response.blocks
@@ -177,41 +197,41 @@ const sendMessage = async () => {
                     .map(block => block.text)
                     .join('\n')
             } else {
-                assistantMessage = 'Desculpe, não consegui processar a resposta.'
+                assistantMessage = 'Sorry, I could not process the response.'
             }
 
-            // Extrai as ferramentas utilizadas
+            // Extract used tools
             const tools = data.tool_calls || []
 
-            // Adiciona resposta do assistente ao histórico com informações das ferramentas
+            // Add assistant response to history with tool information
             chat_history.value.push({
                 role: 'assistant',
                 content: assistantMessage,
                 timestamp: new Date(),
                 tools: tools,
-                agent_name: data.current_agent_name || 'Assistente'
+                agent_name: data.current_agent_name || 'Assistant'
             })
 
-            // Scroll para o final
+            // Scroll to bottom
             await nextTick()
             scrollToBottom()
 
         } catch (error) {
-            console.error('Erro ao enviar mensagem:', error)
+            console.error('Error sending message:', error)
 
-            // Tratamento de erros mais detalhado
+            // More detailed error handling
             if (error.response) {
-                // O servidor respondeu com um status de erro
-                errorMessage.value = `Erro do servidor: ${error.response.status} - ${error.response.data.error || error.response.statusText}`
+                // Server responded with an error status
+                errorMessage.value = `Server error: ${error.response.status} - ${error.response.data.error || error.response.statusText}`
             } else if (error.request) {
-                // A requisição foi feita mas não houve resposta
-                errorMessage.value = 'Erro: Não foi possível conectar ao servidor. Verifique se o backend está rodando.'
+                // Request was made but no response was received
+                errorMessage.value = 'Error: Could not connect to server. Check if the backend is running.'
             } else {
-                // Algo aconteceu na configuração da requisição
-                errorMessage.value = `Erro: ${error.message}`
+                // Something happened in setting up the request
+                errorMessage.value = `Error: ${error.message}`
             }
 
-            // Remove a mensagem do usuário se houver erro
+            // Remove user message if there's an error
             chat_history.value.pop()
         } finally {
             isLoading.value = false
@@ -220,14 +240,14 @@ const sendMessage = async () => {
 }
 
 const formatTimestamp = (timestamp) => {
-    return timestamp.toLocaleTimeString('pt-BR', {
+    return timestamp.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     })
 }
 
 const formatToolName = (toolName) => {
-    // Converte snake_case para Title Case
+    // Convert snake_case to Title Case
     return toolName
         .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -265,5 +285,59 @@ const scrollToBottom = () => {
 .message-content {
     white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+/* Welcome text with red gradient */
+.welcome-text {
+    font-size: 3.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff0000 0%, #ff4759 50%, #ff6b7a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    animation: gradient-shift 3s ease infinite;
+    background-size: 200% 200%;
+}
+
+/* Gradient animation */
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Blinking cursor */
+.cursor {
+    color: #ff4759;
+    animation: blink 1s step-end infinite;
+    font-weight: 400;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+/* Subtitle text */
+.subtitle-text {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 300;
 }
 </style>
