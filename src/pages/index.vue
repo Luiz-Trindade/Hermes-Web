@@ -71,8 +71,39 @@
 
         <v-row v-else class="fill-height">
             <v-col class="d-flex justify-center align-center flex-column">
-                <h1 class="welcome-text">{{ displayedText }}<span class="cursor">|</span></h1>
-                <p class="subtitle-text mt-4">Start a conversation with your AI assistant ✨</p>
+                <div class="welcome-container text-center">
+                    <v-icon size="80" color="red-darken-1" class="mb-4">mdi-robot-outline</v-icon>
+                    <h1 class="welcome-text mb-2" title="Your web interface for testing AI agents">
+                        {{ displayedText }}<span class="cursor">|</span>
+                    </h1>
+                    <p class="subtitle-text mb-6">Start a conversation with your AI assistant ✨</p>
+
+                    <div class="feature-cards d-flex flex-wrap justify-center gap-4">
+                        <v-card class="feature-card ma-2" elevation="2" rounded="lg" width="200">
+                            <v-card-text class="text-center pa-4">
+                                <v-icon color="blue" size="24" class="mb-2">mdi-chat-processing</v-icon>
+                                <div class="text-subtitle-2 font-weight-bold">Smart Conversations</div>
+                                <div class="text-caption text-medium-emphasis">Natural language interactions</div>
+                            </v-card-text>
+                        </v-card>
+
+                        <v-card class="feature-card ma-2" elevation="2" rounded="lg" width="200">
+                            <v-card-text class="text-center pa-4">
+                                <v-icon color="green" size="24" class="mb-2">mdi-tools</v-icon>
+                                <div class="text-subtitle-2 font-weight-bold">Tool Integration</div>
+                                <div class="text-caption text-medium-emphasis">Enhanced capabilities</div>
+                            </v-card-text>
+                        </v-card>
+
+                        <v-card class="feature-card ma-2" elevation="2" rounded="lg" width="200">
+                            <v-card-text class="text-center pa-4">
+                                <v-icon color="purple" size="24" class="mb-2">mdi-lightning-bolt</v-icon>
+                                <div class="text-subtitle-2 font-weight-bold">Fast Responses</div>
+                                <div class="text-caption text-medium-emphasis">Quick and accurate answers</div>
+                            </v-card-text>
+                        </v-card>
+                    </div>
+                </div>
             </v-col>
         </v-row>
     </v-container>
@@ -105,14 +136,17 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import axios from 'axios'
+import localforage from 'localforage'
+import { v4 as uuidv4 } from 'uuid'
 
 const message = ref('')
 const chat_history = ref([])
 const isLoading = ref(false)
 const errorMessage = ref('')
 const displayedText = ref('')
+const conversationId = ref(uuidv4()) // Generate conversation ID on component creation
 
 // Typing effect for welcome message
 const fullText = 'Welcome to Hermes-AI'
@@ -122,28 +156,72 @@ const typeText = () => {
     if (typingIndex < fullText.length) {
         displayedText.value += fullText.charAt(typingIndex)
         typingIndex++
-        setTimeout(typeText, 100) // Adjust speed here (100ms per character)
+        setTimeout(typeText, 100)
     }
 }
 
-// Function to alert before leaving the page
-const handleBeforeUnload = (event) => {
+// Function to save chat history to localForage
+const saveChatHistory = async () => {
+    try {
+        // Convert reactive objects to plain objects and serialize timestamps
+        const serializedHistory = JSON.parse(JSON.stringify(chat_history.value)).map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp).toISOString()
+        }))
+
+        await localforage.setItem(conversationId.value, {
+            chat_history: serializedHistory,
+            timestamp: new Date().toISOString(),
+            id: conversationId.value
+        })
+        console.log('Chat history saved with ID:', conversationId.value)
+    } catch (error) {
+        console.error('Error saving chat history:', error)
+    }
+}
+
+// Function to load chat history if "actual_chat_history" exists
+const loadChatHistory = async () => {
+    try {
+        const existingChat = await localforage.getItem('actual_chat_history')
+        if (existingChat) {
+            chat_history.value = existingChat.chat_history.map(msg => ({
+                ...msg,
+                timestamp: new Date(msg.timestamp)
+            }))
+            conversationId.value = existingChat.id || uuidv4()
+            console.log('Loaded existing chat history with ID:', conversationId.value)
+        }
+    } catch (error) {
+        console.error('Error loading chat history:', error)
+    }
+}
+
+// Watch for changes in chat_history and save automatically
+watch(chat_history, async () => {
     if (chat_history.value.length > 0) {
-        event.preventDefault()
-        event.returnValue = 'You have an ongoing conversation. If you refresh the page, all history will be lost. Do you really want to leave?'
-        return event.returnValue
+        await saveChatHistory()
+    }
+}, { deep: true })
+
+// Function to handle page unload
+const handleBeforeUnload = async () => {
+    if (chat_history.value.length > 0) {
+        await saveChatHistory()
     }
 }
 
 // Add listener when component is mounted
-onMounted(() => {
+onMounted(async () => {
     window.addEventListener('beforeunload', handleBeforeUnload)
-    typeText() // Start typing effect
+    await loadChatHistory()
+    typeText()
 })
 
-// Remove listener when component is unmounted
-onBeforeUnmount(() => {
+// Remove listener and save chat when component is unmounted
+onBeforeUnmount(async () => {
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    await saveChatHistory()
 })
 
 // Configure axios instance
@@ -219,15 +297,11 @@ const sendMessage = async () => {
         } catch (error) {
             console.error('Error sending message:', error)
 
-            // More detailed error handling
             if (error.response) {
-                // Server responded with an error status
                 errorMessage.value = `Server error: ${error.response.status} - ${error.response.data.error || error.response.statusText}`
             } else if (error.request) {
-                // Request was made but no response was received
                 errorMessage.value = 'Error: Could not connect to server. Check if the backend is running.'
             } else {
-                // Something happened in setting up the request
                 errorMessage.value = `Error: ${error.message}`
             }
 
@@ -240,14 +314,15 @@ const sendMessage = async () => {
 }
 
 const formatTimestamp = (timestamp) => {
-    return timestamp.toLocaleTimeString('en-US', {
+    // Handle both Date objects and ISO strings
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp)
+    return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     })
 }
 
 const formatToolName = (toolName) => {
-    // Convert snake_case to Title Case
     return toolName
         .split('_')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -275,6 +350,7 @@ const scrollToBottom = () => {
     left: 0;
     right: 0;
     padding: 8px 16px;
+    box-shadow: #ff4759 2px 1px 8px !important;
 }
 
 .text-input {
@@ -290,8 +366,8 @@ const scrollToBottom = () => {
 /* Welcome text with red gradient */
 .welcome-text {
     font-size: 3.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #ff0000 0%, #ff4759 50%, #ff6b7a 100%);
+    font-weight: 900;
+    background: linear-gradient(135deg, #8B0000 0%, #DC143C 20%, #FF0000 40%, #ff4759 60%, #ff6b7a 80%, #FFB6C1 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
